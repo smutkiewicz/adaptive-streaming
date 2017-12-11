@@ -1,4 +1,4 @@
-package com.company;
+package com.company.event;
 
 /**
  * Created by Admin on 2017-12-10.
@@ -8,7 +8,7 @@ public enum EventType {
     SegmentPlayFinished(2),
     BandwidthChange(3);
 
-    int id;
+    public int id;
 
     EventType(int id) {
         this.id = id;
