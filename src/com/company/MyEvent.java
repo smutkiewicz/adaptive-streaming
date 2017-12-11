@@ -4,9 +4,28 @@ import javafx.scene.chart.XYChart;
 
 public class MyEvent {
 
+    public double time;
+    public double value;
+    public EventType type;
+
+    public MyEvent(int time, int value) {
+        this.time = time;
+        this.value = value;
+    }
+
+    public MyEvent(double time, EventType type, double val) {
+        this.time = time;
+        this.type = type;
+        this.value = val;
+    }
+
+    public void showEventDetails() {
+        System.out.println("time: " + time + ", val: " + value + ", type: " + type.toString());
+    }
+
     public XYChart.Data getChartData() {
         //TODO opakowanie danych zdarzenia w obiekt XYChart.Data
-        return new XYChart.Data(1, 23);
+        return new XYChart.Data(time, value);
     }
 
     public static XYChart.Series sampleListOfEventsSeries() {

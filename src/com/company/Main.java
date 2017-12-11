@@ -8,6 +8,8 @@ public class Main extends Application {
     @Override public void start(Stage stage) {
 
         //TODO Tutaj symulacja
+        StreamingSimulation simulation = new StreamingSimulation();
+        simulation.simulate();
 
         View view = new View(stage);
         view.initLineChart();

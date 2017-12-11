@@ -4,3 +4,4 @@
  # TODO
  * ~~Zacząć~~ (Done!)
  * ~~Layout aplikacji~~ (Done!)
+ * ~~Wszystko pozostałe\{wykres}~~ (Done!)
