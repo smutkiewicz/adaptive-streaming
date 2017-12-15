@@ -10,13 +10,10 @@ import java.util.*;
 public class StreamingSimulation {
 
     //stałe bufora
+    //TODO
     private static final double SEGMENT_SIZE = 2.0; //w sekundach
     private static final double OPTIMAL_BUFFER = 30.0; //w sekundach
     private static final double MIN_BUFFER = 10.0; //w sekundach
-
-    //rozkład ekspotencjalny
-    private static final int FACTOR = 50;
-    private static final double LAMBDA = 2.4;
 
     //bandwidth
     private static final double HIGH = 5.0; // Mbps
@@ -26,12 +23,16 @@ public class StreamingSimulation {
     private double bitrate = 2.0; // w Mbps (stałe)
 
     private double time = 0.0;
-    private double totalTime = 500;
+    private double totalTime = 200;
     private double buffer = 0.0; // w sekundach
     private double segmentTime = 0.0; // ile pobrano z segmentu
 
+    //rozkład ekspotencjalny
+    private int factor = 50;
+    private double lambda = 2.4;
+
     //aktualny stan
-    private boolean play = false;
+    private boolean playing = false;
     private boolean downloading = false;
 
     private MyQueue queue = new MyQueue();
@@ -39,6 +40,15 @@ public class StreamingSimulation {
 
     public StreamingSimulation(EventLineChartMapper mapper) {
         this.mapper = mapper;
+    }
+
+    public void setExpotentialParams(int factor, double lambda) {
+        this.factor = factor;
+        this.lambda = lambda;
+    }
+
+    public void setTotalTime(double totalTime) {
+        this.totalTime = totalTime;
     }
 
     public void simulate() {
@@ -58,20 +68,20 @@ public class StreamingSimulation {
                 segmentTime += downloadTime;
             }
 
-            if(play) {
+            if(playing) {
+                //TODO
                 buffer -= (e.time - time);
+                if(buffer < 0) buffer = 0;
             }
 
             handleEvent(e);
 
-            if(!play) {
-                if(bandwidth > bitrate) {
-                    if(buffer >= SEGMENT_SIZE) {
-                        play(e);
-                    }
+            if(!playing) {
+                if(bandwidth > bitrate && buffer >= SEGMENT_SIZE) {
+                    play(e);
                 }
 
-                if((bandwidth <= bitrate) && buffer >= MIN_BUFFER) {
+                if(bandwidth <= bitrate && buffer >= MIN_BUFFER) {
                     play(e);
                 }
 
@@ -81,7 +91,7 @@ public class StreamingSimulation {
             }
 
             time = e.time;
-            mapper.addToSeries(new ChartData(e.time, buffer, bandwidth, bitrate));
+            mapper.addToSeries(new ChartData(e.time, buffer, 5*bandwidth, bitrate));
         }
     }
 
@@ -95,7 +105,7 @@ public class StreamingSimulation {
             if(myBandwidth == LOW) myBandwidth = HIGH;
             else myBandwidth = LOW;
 
-            time += expotentialDistribution(LAMBDA); //losuj czas
+            time += expotentialDistribution(lambda); //losuj czas
             MyEvent e = new MyEvent(time, EventType.BandwidthChange, myBandwidth);
             queue.add(e);
         }
@@ -140,7 +150,7 @@ public class StreamingSimulation {
 
     private double expotentialDistribution(double lambda) {
         Random rand = new Random();
-        return FACTOR*Math.log(1-rand.nextDouble())/(-lambda);
+        return factor*Math.log(1-rand.nextDouble())/(-lambda);
     }
 
     private void continueDownloading(MyEvent e) {
@@ -152,11 +162,11 @@ public class StreamingSimulation {
 
     private void play(MyEvent e) {
         queue.add(new MyEvent(e.time + SEGMENT_SIZE, EventType.SegmentPlayFinished, 0.0));
-        play = true;
+        playing = true;
     }
 
     private void stop() {
-        play = false;
+        playing = false;
     }
 
 }

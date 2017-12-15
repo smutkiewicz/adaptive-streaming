@@ -1,6 +1,5 @@
 package com.company.event;
 
-import com.company.event.EventType;
 import javafx.scene.chart.XYChart;
 
 public class MyEvent {
@@ -16,7 +15,6 @@ public class MyEvent {
     }
 
     public void showEventDetails() {
-        //System.out.printf("time: " + time + ", val: " + value + ", type: " + type.toString());
         System.out.printf("time: %6f, val: %4.1f, type: %s\n", time, value, type.toString());
     }
 

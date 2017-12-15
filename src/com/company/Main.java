@@ -8,19 +8,29 @@ import javafx.stage.Stage;
 
 public class Main extends Application {
 
+    private EventLineChartMapper mapper;
+    private StreamingSimulation simulation;
+    private View view;
+
     @Override public void start(Stage stage) {
 
-        EventLineChartMapper mapper = new EventLineChartMapper();
-        StreamingSimulation simulation = new StreamingSimulation(mapper);
+        mapper = new EventLineChartMapper();
+        simulation = new StreamingSimulation(mapper);
+        simulation.setExpotentialParams(100, 2.0);
+        simulation.setTotalTime(300);
         simulation.simulate();
 
-        View view = new View(stage);
+        view = new View(stage);
         view.initLineChart();
         view.initView();
 
+        addSimulationSeries();
+    }
+
+    public void addSimulationSeries() {
         //dodaj punkty wykresu: czas, bufor, bandwidth, bitrate
-        view.addNewSeries(mapper.getBandwidthSeries(), View.BANDWIDTH_SERIES_NAME);
         view.addNewSeries(mapper.getBufferSeries(), View.BUFFER_SERIES_NAME);
+        view.addNewSeries(mapper.getBandwidthSeries(), View.BANDWIDTH_SERIES_NAME);
         view.addNewSeries(mapper.getBitrateSeries(), View.BITRATE_SERIES_NAME);
     }
 
