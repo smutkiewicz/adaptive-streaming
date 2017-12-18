@@ -6,7 +6,17 @@ import com.company.simulation.StreamingSimulation;
 import javafx.application.Application;
 import javafx.stage.Stage;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Main extends Application {
+
+    private static final double HIGH = 5.0; // Mbps
+    private static final double LOW = 1.0; // Mbps
+
+    private static final double HIGH_BITRATE = 4.0; // Mbps
+    private static final double MEDIUM_BITRATE = 3.0; // Mbps
+    private static final double LOW_BITRATE = 2.0; // Mbps
 
     private EventLineChartMapper mapper;
     private StreamingSimulation simulation;
@@ -16,6 +26,8 @@ public class Main extends Application {
 
         mapper = new EventLineChartMapper();
         simulation = new StreamingSimulation(mapper);
+        simulation.setPossibleBitrates(getPossibleBitrates());
+        simulation.setBandwidthRange(LOW, HIGH);
         simulation.setExpotentialParams(100, 2.0);
         simulation.setTotalTime(300);
         simulation.simulate();
@@ -25,6 +37,15 @@ public class Main extends Application {
         view.initView();
 
         addSimulationSeries();
+    }
+
+    public List<Double> getPossibleBitrates() {
+        ArrayList<Double> bitrates = new ArrayList<>();
+        bitrates.add(LOW_BITRATE);
+        bitrates.add(MEDIUM_BITRATE);
+        bitrates.add(HIGH_BITRATE);
+
+        return bitrates;
     }
 
     public void addSimulationSeries() {

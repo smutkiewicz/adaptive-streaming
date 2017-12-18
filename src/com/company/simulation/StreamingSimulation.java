@@ -6,11 +6,11 @@ import com.company.event.EventType;
 import com.company.event.MyEvent;
 
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class StreamingSimulation {
 
     //stałe bufora
-    //TODO
     private static final double SEGMENT_SIZE = 2.0; //w sekundach
     private static final double OPTIMAL_BUFFER = 30.0; //w sekundach
     private static final double MIN_BUFFER = 10.0; //w sekundach
@@ -18,9 +18,14 @@ public class StreamingSimulation {
     //bandwidth
     private static final double HIGH = 5.0; // Mbps
     private static final double LOW = 1.0; // Mbps
+    private double highRange = HIGH;
+    private double lowRange = LOW;
     private double bandwidth = 0.0;
 
-    private double bitrate = 2.0; // w Mbps (stałe)
+    //bitrate
+    private static final double INITIAL_BITRATE = 2.0; // w Mbps (stałe)
+    private ArrayList<Double> possibleBitrates;
+    private double bitrate = 2.0; // w Mbps
 
     private double time = 0.0;
     private double totalTime = 200;
@@ -39,7 +44,22 @@ public class StreamingSimulation {
     private EventLineChartMapper mapper;
 
     public StreamingSimulation(EventLineChartMapper mapper) {
+        this.possibleBitrates = new ArrayList<>();
         this.mapper = mapper;
+    }
+
+    public void setPossibleBitrates(List<Double> bitrates) {
+        possibleBitrates.addAll(bitrates);
+
+        if(possibleBitrates.isEmpty()) {
+            possibleBitrates.add(2.0);
+            bitrate = 2.0;
+        }
+    }
+
+    public void setBandwidthRange(double lowRange, double highRange) {
+        this.lowRange = lowRange;
+        this.highRange = highRange;
     }
 
     public void setExpotentialParams(int factor, double lambda) {
@@ -69,7 +89,6 @@ public class StreamingSimulation {
             }
 
             if(playing) {
-                //TODO
                 buffer -= (e.time - time);
                 if(buffer < 0) buffer = 0;
             }
@@ -91,19 +110,18 @@ public class StreamingSimulation {
             }
 
             time = e.time;
-            mapper.addToSeries(new ChartData(e.time, buffer, 5*bandwidth, bitrate));
+            mapper.addToSeries(new ChartData(e.time, buffer, bandwidth, bitrate));
         }
     }
 
     private void insertEvents() {
-        double myBandwidth = LOW;
+        double myBandwidth;
         time = 0.0;
         queue.add(new MyEvent(0.0, EventType.BandwidthChange, LOW));
 
         while (time < totalTime) {
 
-            if(myBandwidth == LOW) myBandwidth = HIGH;
-            else myBandwidth = LOW;
+            myBandwidth = setRandomBandwidth();
 
             time += expotentialDistribution(lambda); //losuj czas
             MyEvent e = new MyEvent(time, EventType.BandwidthChange, myBandwidth);
@@ -115,6 +133,7 @@ public class StreamingSimulation {
         switch (e.type) {
             case BandwidthChange:
                 bandwidth = e.value; //zmiana bandwidth na tę z Eventu
+                setNewBitrate(e.value);
 
                 if (downloading) {
                     queue.removeEventsByType(EventType.DownloadFinished);
@@ -153,11 +172,50 @@ public class StreamingSimulation {
         return factor*Math.log(1-rand.nextDouble())/(-lambda);
     }
 
+    private double setRandomBandwidth() {
+        return ThreadLocalRandom.current().nextDouble(lowRange, highRange);
+    }
+
+    private void setNewBitrate(double bandwidthValue) {
+        ArrayList<Double> bitrates = getPossibleBitrates();
+        bitrates.sort((b1, b2) -> b1.compareTo(b2));
+
+
+        for(int i = 0; i < bitrates.size(); i++) {
+            double b = bitrates.get(i);
+            bitrate = getInitialBitrate();
+
+            if(b >= bandwidthValue) {
+                break;
+            } else {
+                bitrate = b;
+            }
+        }
+    }
+
     private void continueDownloading(MyEvent e) {
         double videoTime = SEGMENT_SIZE - segmentTime;
         double download = videoTime * bitrate / bandwidth;
         queue.add(new MyEvent(e.time + download, EventType.DownloadFinished, 0.0));
         downloading = true;
+    }
+
+    private ArrayList<Double> getPossibleBitrates() {
+        if(possibleBitrates.isEmpty()) {
+            ArrayList<Double> bitrates = new ArrayList<>();
+            bitrates.add(INITIAL_BITRATE);
+            return bitrates;
+        } else {
+            return possibleBitrates;
+        }
+    }
+
+    private double getInitialBitrate() {
+        if(possibleBitrates.isEmpty()) {
+            return INITIAL_BITRATE;
+        } else {
+            return possibleBitrates.get(0);
+        }
     }
 
     private void play(MyEvent e) {

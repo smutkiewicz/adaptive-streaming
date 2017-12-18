@@ -24,3 +24,4 @@
  * ~~Zacząć~~ (Done!)
  * ~~Layout aplikacji~~ (Done!)
  * ~~Symulacja i wykres~~ (Done!)
+ * ~~Dowolna wartość bandwidth i dobór bitrate w zależności od niej~~ (Done!)
